@@ -1,7 +1,7 @@
 Meet Trollop
 ============
 
-Trollop is a Python library for working with the `Trello API`_ <https://trello.com/docs/api/index.html>`_.
+Trollop is a Python library for working with the `Trello API`_.
 
 Quick Start
 ===========
