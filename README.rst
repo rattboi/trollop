@@ -67,6 +67,12 @@ already-implemented classes in trollop/lib.py to see how to declare a new
 class, attribute, or relation.  If you'd like to pitch in to finish covering
 the whole API, please send a pull request with your changes.
 
+License
+=======
+
+Trollop is licensed under the `MIT License`_.
+
 .. _Trello API: https://trello.com/docs/api/index.html
 .. _API key: https://trello.com/card/board/generating-your-developer-key/4ed7e27fe6abb2517a21383d/4eea75831576578f2713f460
 .. _oauth token: https://trello.com/card/board/getting-a-user-token-and-oauth-urls/4ed7e27fe6abb2517a21383d/4eea75bc1576578f2713fc5f 
+.. _MIT License: http://www.opensource.org/licenses/mit-license.php
