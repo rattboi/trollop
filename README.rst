@@ -61,11 +61,9 @@ objects.::
 Help Wanted
 ===========
 
-Some objects are not yet implemented (e.g. actions), as well as some relations
-between objects.  They're easy to add though; just take a look at the
-already-implemented classes in trollop/lib.py to see how to declare a new
-class, attribute, or relation.  If you'd like to pitch in to finish covering
-the whole API, please send a pull request with your changes.
+Coverage for creating/updating objects is still really thin.  If you'd like to
+pitch in to finish covering the whole API, please send a pull request with your
+changes.
 
 License
 =======
