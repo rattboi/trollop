@@ -10,6 +10,7 @@ setup(
     include_package_data=True,
 	install_requires = [
         'httplib2',
+        'isodate',
 	],
     url='http://bits.btubbs.com/trollop',
     description='A Python library for working with the Trello api.',

@@ -1,7 +1,7 @@
 from urllib import urlencode
-
 import httplib2
 import json
+import isodate
 
 
 
@@ -98,25 +98,6 @@ class LazyTrello(object):
     # GET before trying to return a value.
     _attrs = set() # eg set(['name', 'url'])
 
-    # These are related objects that need to be instantiated with a particular
-    # field from the current object as their id.  For example, a Card object
-    # has a property for the Board to which it belongs.  This is a little more
-    # complicated than our other magic because 3 pieces of data are involved:
-    # the name of the attribute as accessed, the name of the field containing
-    # the ID, and the name of the class that should be instantiated with the
-    # id.  Example:
-    # _properties = {'board': Related('idBoard', 'Board')}
-    _properties = {}
-
-    # Here you can specify related objects that can be looked up on a sub-path
-    # of the object you've got.  Use the name of the subpath as the key
-    # (without any slashes), and the class to use to instantiate those objects
-    # as the value.  If you run into a class declaration ordering problem, you
-    # can also put the name of the class in a string and use that for the
-    # value.
-    _sublists = {} # eg {'actions': Action} or {'actions': 'Action'}
-
-
     def __init__(self, conn, obj_id, data=None):
         self.id = obj_id
         self.conn = conn
@@ -128,12 +109,8 @@ class LazyTrello(object):
             self._data = data
 
     def __getattr__(self, attr):
-        # For attributes specified in self._attrs, query Trello upon
-        # access
-        if (attr == '_data' or
-           attr in self._attrs or
-           attr in self._sublists or
-           attr in self._properties):
+        # For attributes specified in self._attrs, query Trello upon access
+        if (attr == '_data' or attr in self._attrs):
             if not '_data' in self.__dict__:
                 self._data = json.loads(self.conn.get(self.path))
 
@@ -143,22 +120,8 @@ class LazyTrello(object):
                 return self._data
             elif attr in self._data:
                 return self._data[attr]
-            elif attr in self._properties:
-                prop = self._properties[attr]
-                return prop.get_instance(self.conn, self._data[prop.field])
-            elif attr in self._sublists:
-                # classes may be values right in the dict, or may be identified
-                # by name as strings (for cases where you want to reference a
-                # class that's not defined yet.)
-                klass = get_class(self._sublists[attr])
-                path = self._prefix + self.id + '/' + attr
-                data = json.loads(self.conn.get(path))
-                # TODO: cache these on the object so you don't have to do
-                # multiple http requests if, for example, list.cards is called
-                # multiple times on the same object.
-                return [klass(self.conn, d['id'], d) for d in data]
 
-            raise AttributeError("Trello data has %s key" % attr)
+            raise AttributeError("Trello data has no '%s' key" % attr)
         else:
             raise AttributeError("%r object has no attribute %r" %
                                  (type(self).__name__, attr))
@@ -171,16 +134,64 @@ class Closable(object):
         result = self.conn.put(path, params=params)
 
 
-class Related(object):
-    """Maps an idSomething string attr on an object to another object type."""
-
-    def __init__(self, field, cls):
-        # cls may be a name of a class, or the class itself
-        self.field = field
-        self.cls = cls
+class TrelloField(object):
 
     def get_instance(self, conn, obj_id):
         return get_class(self.cls)(conn, obj_id)
+
+
+class ObjectField(TrelloField):
+    """
+    Maps an idSomething string attr on an object to another object type.
+    """
+
+    def __init__(self, key=None, cls=None):
+
+        self.key = key
+        self.cls = cls
+
+    def __get__(self, instance, owner):
+        return self.get_instance(instance.conn, instance._data[self.key])
+
+
+class ListField(ObjectField):
+    """
+    Like an ObjectField, but a list of them.  For fleshing out things like
+    idMembers.
+    """
+
+    def __get__(self, instance, owner):
+        ids = instance._data[self.key]
+        conn = instance.conn
+        return [self.get_instance(conn, id) for id in ids]
+
+class DateField(TrelloField):
+    def __init__(self, key):
+        self.key = key
+
+    def __get__(self, instance, owner):
+        strdata = instance._data[self.key]
+        return isodate.parse_datetime(strdata)
+
+
+class SubList(TrelloField):
+    """
+    Kinda like a ListField, but for things listed under a URL subpath (like
+    /boards/<id>/cards), as opposed to a list of ids in the document body
+    itself.
+    """
+
+    def __init__(self, cls):
+        # cls may be a name of a class, or the class itself
+        self.cls = cls
+
+    def __get__(self, instance, owner):
+        if not hasattr(self, '_list'):
+            cls = get_class(self.cls)
+            path = instance._prefix + instance.id + cls._prefix
+            data = json.loads(instance.conn.get(path))
+            self._list = [cls(instance.conn, d['id'], d) for d in data]
+        return self._list
 
 
 class Action(LazyTrello):
@@ -193,8 +204,7 @@ class Action(LazyTrello):
         'idMemberCreator',
     ])
 
-    # TODO: override the default date property and provide a version that
-    # returns a Python datetime.
+    date = DateField('date')
 
 
 class Board(LazyTrello, Closable):
@@ -212,63 +222,35 @@ class Board(LazyTrello, Closable):
         'prefs',
     ])
 
-    _sublists = {
-        'actions': 'Action',
-        'cards': 'Card',
-        'checklists': 'Checklist',
-        'lists': 'List',
-        'members': 'Member',
-    }
+    actions = SubList('Action')
+    cards = SubList('Card')
+    checklists = SubList('Checklist')
+    members = SubList('Member')
 
-    _properties = {
-        # FIXME: organization might not be present.  Not sure how to handle that
-        # yet.
-        'organization': Related('idOrganization', 'Organization'),
-    }
+    organization = ObjectField('idOrganization', 'Organization')
 
 
 class Card(LazyTrello, Closable):
 
     _prefix = '/cards/'
-    _attrs = set([
-        'url',
-        'idList',
-        'closed',
-        'name',
-        'badges',
-        'checkItemStates',
-        'desc',
-        'idBoard',
-        'idMembers',
-        'labels',
-    ])
-    _properties = {
-        'board': Related('idBoard', 'Board'),
-        'list': Related('idList', 'List'),
-    }
+    _attrs = set([ 'url', 'idList', 'closed', 'name', 'badges',
+                  'checkItemStates', 'desc', 'idBoard', 'idMembers', 'labels',
+                 ])
 
-    # XXX: Another common pattern.  Maybe add magic for '_lists'
-    @property
-    def members(self):
-        return [Member(self.conn, mid) for mid in self.idMembers]
+    board = ObjectField('idBoard', 'Board')
+    list = ObjectField('idList', 'List')
+
+    members = ListField('idMembers', 'Member')
 
 
 class Checklist(LazyTrello):
+
     _prefix = '/checklists/'
+    _attrs = set([ 'checkitems', 'idBoard', 'name', ])
 
-    _attrs = set([
-        'checkitems',
-        'idBoard',
-        'name',
-    ])
+    board = ObjectField('idBoard', 'Board')
 
-    _properties = {
-        'board': Related('idBoard', 'Board')
-    }
-
-    _sublists = {
-        'cards': Card,
-    }
+    cards = SubList('Card')
 
     # TODO: provide a nicer API for checkitems.  Figure out where they're
     # marked as checked or not.
@@ -280,22 +262,13 @@ class Checklist(LazyTrello):
 class List(LazyTrello, Closable):
 
     _prefix = '/lists/'
-    _attrs = set([
-        'url',
-        'idBoard',
-        'closed',
-        'name'
-    ])
-    _sublists = {
-        'cards': 'Card',
-    }
-    _properties = {
-        'board': Related('idBoard', 'Board'),
-    }
+    _attrs = set([ 'url', 'idBoard', 'closed', 'name' ])
 
-    # TODO: implement a 'cards' list like the 'members' list that Board has.
+    board = ObjectField('idBoard', 'Board')
+    cards = SubList('Card')
 
-
+    # TODO: Generalize this pattern, add it to a base class, and make it work
+    # correctly with SubList
     def add_card(self, name, desc=None):
         path = self._prefix + self.id + '/cards'
         body = json.dumps({'name': name, 'idList': self.id, 'desc': desc,
@@ -308,47 +281,28 @@ class List(LazyTrello, Closable):
 class Member(LazyTrello):
 
     _prefix = '/members/'
-    _attrs = set([
-        'url',
-        'fullName',
-        'bio',
-        'gravatar',
-        'username',
-    ])
-    _sublists = {
-        'actions': Action,
-        'boards': Board,
-        'cards': Card,
-        'notifications': 'Notification',
-        'organizations': 'Organization',
-    }
+    _attrs = set([ 'url', 'fullName', 'bio', 'gravatar', 'username', ])
+
+    actions = SubList('Action')
+    boards = SubList('Board')
+    cards = SubList('Card')
+    notifications = SubList('Notification')
+    organizations = SubList('Organization')
 
 
 class Notification(LazyTrello):
+
     _prefix = '/notifications/'
-    _attrs = set([
-        'data',
-        'date',
-        'idMemberCreator',
-        'type',
-        'unread',
-    ])
-    _properties = {
-        'creator': Related('idMemberCreator', 'Member'),
-    }
+    _attrs = set([ 'data', 'date', 'idMemberCreator', 'type', 'unread', ])
+
+    creator = ObjectField('idMemberCreator', 'Member')
 
 
 class Organization(LazyTrello):
 
     _prefix = '/organizations/'
-    _attrs = set([
-        'url',
-        'desc',
-        'displayName',
-        'name',
-    ])
-    _sublists = {
-        'actions': Action,
-        'boards': Board,
-        'members': Member,
-    }
+    _attrs = set([ 'url', 'desc', 'displayName', 'name', ])
+
+    actions = SubList('Action')
+    boards = SubList('Board')
+    members = SubList('Member')
