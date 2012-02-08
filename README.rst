@@ -110,7 +110,7 @@ Trello objects have smart fields that automatically look up related objects::
     In [11]: lst.name
     Out[11]: u'Icebox'
 
-    In [12]: lst.id
+    In [12]: lst._id
     Out[12]: u'4f17cb04d5c817032301c179'
 
     In [13]: len(lst.cards)
