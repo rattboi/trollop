@@ -75,9 +75,32 @@ from Trello::
      'name',
      'url']
 
+The exact parsed JSON returned from trello.com is available as the _data
+attribute on all Trello objects::
 
-There are convenience properties to automatically look up related
-objects::
+    In [7]: card._data
+    Out[7]: 
+    {u'badges': {u'attachments': 0,
+                 u'checkItems': 0,
+                 u'checkItemsChecked': 0,
+                 u'comments': 1,
+                 u'description': True,
+                 u'due': None,
+                 u'fogbugz': u'',
+                 u'votes': 0},
+     u'checkItemStates': [],
+     u'closed': True,
+     u'desc': u'And call it Trollop.',
+     u'id': u'4f2e454cefab2bbd4ea71b02',
+     u'idBoard': u'4e8df268f14f2517a7a342fa',
+     u'idList': u'4f17cb04d5c817032301c179',
+     u'idMembers': [],
+     u'idShort': 130,
+     u'labels': [],
+     u'name': u'Build a Python Trello Library',
+     u'url': u'https://trello.com/card/build-a-python-trello-library/4e8df268f14f2517a7a342fa/130'}
+
+Trello objects have smart fields that automatically look up related objects::
 
     In [9]: lst = card.list
 
