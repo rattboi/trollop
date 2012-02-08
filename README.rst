@@ -24,8 +24,7 @@ representing the user whose oauth token was used to connect::
 In the previous example no HTTP request was made until command 4, the access
 to conn.me.username.  Trollop objects are lazy.
 
-The connection object has methods for getting objects by their IDs.  The
-objects will have attributes named exactly as they are in the Trello API docs.::
+The connection object has methods for getting objects by their IDs::
 
     In [5]: card = conn.get_card('4f2e454cefab2bbd4ea71b02')
 
@@ -35,11 +34,9 @@ objects will have attributes named exactly as they are in the Trello API docs.::
     In [7]: card.desc
     Out[7]: u'And call it Trollop.'
 
-    In [8]: card.idList
-    Out[8]: u'4f17cb04d5c817032301c179' 
 
-In addition, there are convenience properties to automatically look up related
-objects.::
+There are convenience properties to automatically look up related
+objects::
 
     In [9]: lst = card.list
 
