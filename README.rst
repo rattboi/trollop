@@ -34,6 +34,47 @@ The connection object has methods for getting objects by their IDs::
     In [7]: card.desc
     Out[7]: u'And call it Trollop.'
 
+You can use normal Python introspection techniques to see the available
+attributes.  They'll mostly be named exactly as they are in the JSON returned
+from Trello::
+
+    In [13]: dir(card)
+    Out[13]: 
+    ['__class__',
+     '__delattr__',
+     '__dict__',
+     '__doc__',
+     '__format__',
+     '__getattr__',
+     '__getattribute__',
+     '__hash__',
+     '__init__',
+     '__module__',
+     '__new__',
+     '__reduce__',
+     '__reduce_ex__',
+     '__repr__',
+     '__setattr__',
+     '__sizeof__',
+     '__str__',
+     '__subclasshook__',
+     '__weakref__',
+     '_conn',
+     '_id',
+     '_path',
+     '_prefix',
+     'badges',
+     'board',
+     'checkItemStates',
+     'close',
+     'closed',
+     'desc',
+     'labels',
+     'list',
+     'members',
+     'name',
+     'url']
+
 
 There are convenience properties to automatically look up related
 objects::
