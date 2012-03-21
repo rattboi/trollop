@@ -190,11 +190,10 @@ class SubList(object):
         self.cls = cls
 
     def __get__(self, instance, owner):
-        if not hasattr(self, '_list'):
-            cls = get_class(self.cls)
-            path = instance._prefix + instance._id + cls._prefix
-            data = json.loads(instance._conn.get(path))
-            self._list = [cls(instance._conn, d['id'], d) for d in data]
+        cls = get_class(self.cls)
+        path = instance._prefix + instance._id + cls._prefix
+        data = json.loads(instance._conn.get(path))
+        self._list = [cls(instance._conn, d['id'], d) for d in data]
         return self._list
 
 ### BEGIN ACTUAL WRAPPER OBJECTS
