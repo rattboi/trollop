@@ -10,7 +10,8 @@ class Namespace(dict):
 
 
 class FakeHttp(object):
-    """Mock for httplib2.Http"""
+    """Mock for httplib2.Http.  Should be initted with a dict that looks like
+    an httplib2 response, and a string for the content to be returned."""
 
     def __init__(self, response, content):
         self.response = response

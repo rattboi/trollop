@@ -189,13 +189,16 @@ class SubList(object):
         # cls may be a name of a class, or the class itself
         self.cls = cls
 
+        # A dict of sublists, by instance id
+        self._lists = {}
+
     def __get__(self, instance, owner):
-        if not hasattr(self, '_list'):
+        if not instance._id in self._lists:
             cls = get_class(self.cls)
             path = instance._prefix + instance._id + cls._prefix
             data = json.loads(instance._conn.get(path))
-            self._list = [cls(instance._conn, d['id'], d) for d in data]
-        return self._list
+            self._lists[instance._id] = [cls(instance._conn, d['id'], d) for d in data]
+        return self._lists[instance._id]
 
 ### BEGIN ACTUAL WRAPPER OBJECTS
 
