@@ -45,8 +45,6 @@ class TrelloConnection(object):
             # creating a new object. If it does, then we shouldn't restrict
             # ourselves to a 200 here.
             raise TrelloError(content)
-        print url
-        print content
         return content
 
     def get(self, path, params=None):
