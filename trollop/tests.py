@@ -5,41 +5,39 @@ import urlparse
 from trollop import TrelloConnection
 
 
-class Namespace(dict):
+class AttrDict(dict):
     def __init__(self, *args, **kwargs):
         dict.__init__(self, *args, **kwargs)
         self.__dict__ = self
 
+class FakeRequest(object):
+    """Mock for requests.session.request"""
 
-class FakeHttp(object):
-    """Mock for httplib2.Http.  Should be initted with a dict that looks like
-    an httplib2 response, and a dict representing the server side data, keyed
-    by url path."""
-
-    def __init__(self, response, data):
-        self.response = response
+    def __init__(self, headers, data):
+        self.headers = headers
         self.data = data
-        # store requests in this list so they can be inspected later.
-        self.requests = []
+        self.history = []
 
-    def request(self, url, method, *args, **kwargs):
+    def __call__(self, method, url, *args, **kwargs):
         path = urlparse.urlparse(url).path
-        self.requests.append(locals())
+        self.history.append(AttrDict(vars()))
         try:
-            return Namespace(self.response), json.dumps(self.data[path])
+            return AttrDict(headers=self.headers,
+                             text=json.dumps(self.data[path]),
+                             status_code=200)
         except KeyError:
-            return Namespace({'status': 404}), "Not found"
+            return AttrDict(status_code=404)
 
 
 class TrollopTestCase(unittest.TestCase):
 
-    response = {'status': 200}
+    headers = {'status': 200}
     data = {}
 
     def setUp(self):
         self.conn = TrelloConnection('blah', 'blerg')
         # monkeypatch the http client
-        self.conn.client = FakeHttp(self.response, self.data)
+        self.conn.session.request = FakeRequest(self.headers, self.data)
 
 
 class TestGetMe(TrollopTestCase):
@@ -60,11 +58,11 @@ class TestGetMe(TrollopTestCase):
         # will also force an http request
         assert self.conn.me.username == self.data['/1/members/me']['username']
 
-        # Make sure that client.request was called with the right path and
+        # Make sure that session.request was called with the right path and
         # method, by inspecting the list of requests made to the mock.
-        req1 = self.conn.client.requests[0]
-        assert req1['url'].startswith('https://api.trello.com/1/members/me')
-        assert req1['method'] == 'GET'
+        req1 = self.conn.session.request.history[0]
+        assert req1.url.startswith('https://api.trello.com/1/members/me')
+        assert req1.method == 'GET'
 
 class SublistTests(TrollopTestCase):
     data = {'/1/members/me/boards/':
