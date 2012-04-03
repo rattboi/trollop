@@ -11,7 +11,10 @@ class AttrDict(dict):
         self.__dict__ = self
 
 class FakeRequest(object):
-    """Mock for requests.session.request"""
+    """Mock for requests.session.request.  Init it with the headers and data
+    that you want to get back when calling session.request.  Keeps a history of
+    requests made, on session.request.history, so you can use a
+    record-then-assert pattern."""
 
     def __init__(self, headers, data):
         self.headers = headers
