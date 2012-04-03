@@ -1,9 +1,8 @@
 from urllib import urlencode
-import httplib2
 import json
 import isodate
 
-
+import requests
 
 
 def get_class(str_or_class):
@@ -22,14 +21,13 @@ class TrelloError(Exception):
 class TrelloConnection(object):
 
     def __init__(self, api_key, oauth_token):
-        self.client = httplib2.Http()
+        self.session = requests.session(
+            headers={'Accept': 'application/json',
+                     'Content-Type': 'application/json'})
         self.key = api_key
         self.token = oauth_token
 
     def request(self, method, path, params=None, body=None):
-        headers = {'Accept': 'application/json'}
-        if method == 'POST' or method == 'PUT':
-            headers.update({'Content-Type': 'application/json'})
 
         if not path.startswith('/'):
             path = '/' + path
@@ -38,14 +36,13 @@ class TrelloConnection(object):
         params = params or {}
         params.update({'key': self.key, 'token': self.token})
         url += '?' + urlencode(params)
-        response, content = self.client.request(url, method,
-                                                headers=headers,body=body)
-        if response.status != 200:
+        response = self.session.request(method, url, data=body)
+        if response.status_code != 200:
             # TODO: confirm that Trello never returns a 201, for example, when
             # creating a new object. If it does, then we shouldn't restrict
             # ourselves to a 200 here.
-            raise TrelloError(content)
-        return content
+            raise TrelloError(response.text)
+        return response.text
 
     def get(self, path, params=None):
         return self.request('GET', path, params)
