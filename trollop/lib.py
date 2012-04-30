@@ -80,39 +80,6 @@ class TrelloConnection(object):
         return Member(self, 'me')
 
 
-class LazyTrello(object):
-    """
-    Parent class for Trello objects (cards, lists, boards, members, etc).  This
-    should always be subclassed, never used directly.
-    """
-    # The Trello API path where objects of this type may be found. eg '/cards/'
-    @property
-    def _prefix(self):
-        raise NotImplementedError, "LazyTrello subclasses MUST define a _prefix"
-
-    def __init__(self, conn, obj_id, data=None):
-        self._id = obj_id
-        self._conn = conn
-        self._path = self._prefix + obj_id
-
-        # If we've been passed the data, then remember it and don't bother
-        # fetching later.
-        if data:
-            self._data = data
-
-    def __getattr__(self, attr):
-        if attr == '_data':
-            # Something is trying to access the _data attribute.  If we haven't
-            # fetched data from Trello yet, do so now.  Cache the result on the
-            # object.
-            if not '_data' in self.__dict__:
-                self._data = json.loads(self._conn.get(self._path))
-
-            return self._data
-        else:
-            raise AttributeError("%r object has no attribute %r" %
-                                 (type(self).__name__, attr))
-
 
 class Closable(object):
     """
@@ -129,21 +96,21 @@ class Field(object):
     A simple field on a Trello object.  Maps the attribute to a key in the
     object's _data dict.
     """
-    # Accessing obj._data will trigger a fetch from Trello if _data isn't
-    # already present.
 
-    def __init__(self, key):
+    def __init__(self, key=None):
         self.key = key
 
     def __get__(self, instance, owner):
+        # Accessing instance._data will trigger a fetch from Trello if the
+        # _data attribute isn't already present.
         return instance._data[self.key]
 
 
 class DateField(Field):
 
     def __get__(self, instance, owner):
-        strdata = instance._data[self.key]
-        return isodate.parse_datetime(strdata)
+        raw = super(DateField, self).__get__(instance, owner)
+        return isodate.parse_datetime(raw)
 
 
 class ObjectField(Field):
@@ -197,14 +164,67 @@ class SubList(object):
             self._lists[instance._id] = [cls(instance._conn, d['id'], d) for d in data]
         return self._lists[instance._id]
 
+
+class TrelloMeta(type):
+    """
+    Metaclass for LazyTrello objects, allowing documents to have Field
+    attributes that know their names without them having to be explicitly
+    passed to __init__.
+    """
+    def __new__(cls, name, bases, dct):
+        for k, v in dct.items():
+            # For every Field on the class that wasn't initted with an explicit
+            # 'key', set the field name as the key.
+            if isinstance(v, Field) and v.key is None:
+                v.key = k
+        return super(TrelloMeta, cls).__new__(cls, name, bases, dct)
+
+
+class LazyTrello(object):
+    """
+    Parent class for Trello objects (cards, lists, boards, members, etc).  This
+    should always be subclassed, never used directly.
+    """
+
+    __metaclass__ = TrelloMeta
+
+    # The Trello API path where objects of this type may be found. eg '/cards/'
+    @property
+    def _prefix(self):
+        raise NotImplementedError, "LazyTrello subclasses MUST define a _prefix"
+
+    def __init__(self, conn, obj_id, data=None):
+        self._id = obj_id
+        self._conn = conn
+        self._path = self._prefix + obj_id
+
+        # If we've been passed the data, then remember it and don't bother
+        # fetching later.
+        if data:
+            self._data = data
+
+    def __getattr__(self, attr):
+        if attr == '_data':
+            # Something is trying to access the _data attribute.  If we haven't
+            # fetched data from Trello yet, do so now.  Cache the result on the
+            # object.
+            if not '_data' in self.__dict__:
+                self._data = json.loads(self._conn.get(self._path))
+
+            return self._data
+        else:
+            raise AttributeError("%r object has no attribute %r" %
+                                 (type(self).__name__, attr))
+
 ### BEGIN ACTUAL WRAPPER OBJECTS
+
 
 class Action(LazyTrello):
 
     _prefix = '/actions/'
-    data = Field('data')
-    type = Field('type')
-    date = DateField('date')
+    data = Field()
+    type = Field()
+    date = DateField()
     creator = ObjectField('idMemberCreator', 'Member')
 
 
@@ -212,12 +232,12 @@ class Board(LazyTrello, Closable):
 
     _prefix = '/boards/'
 
-    url = Field('url')
-    name = Field('name')
-    pinned = Field('pinned')
-    prefs = Field('prefs')
-    desc = Field('desc')
-    closed = Field('closed')
+    url = Field()
+    name = Field()
+    pinned = Field()
+    prefs = Field()
+    desc = Field()
+    closed = Field()
 
     organization = ObjectField('idOrganization', 'Organization')
 
@@ -232,13 +252,13 @@ class Card(LazyTrello, Closable):
 
     _prefix = '/cards/'
 
-    url = Field('url')
-    closed = Field('closed')
-    name = Field('name')
-    badges = Field('badges')
-    checkItemStates = Field('checkItemStates')
-    desc = Field('desc')
-    labels = Field('labels')
+    url = Field()
+    closed = Field()
+    name = Field()
+    badges = Field()
+    checkItemStates = Field()
+    desc = Field()
+    labels = Field()
 
     board = ObjectField('idBoard', 'Board')
     list = ObjectField('idList', 'List')
@@ -249,8 +269,8 @@ class Card(LazyTrello, Closable):
 class Checklist(LazyTrello):
 
     _prefix = '/checklists/'
-    checkitems = Field('checkitems')
-    name = Field('name')
+    checkitems = Field()
+    name = Field()
     board = ObjectField('idBoard', 'Board')
     cards = SubList('Card')
 
@@ -265,9 +285,9 @@ class List(LazyTrello, Closable):
 
     _prefix = '/lists/'
 
-    closed = Field('closed')
-    name = Field('name')
-    url = Field('url')
+    closed = Field()
+    name = Field()
+    url = Field()
     board = ObjectField('idBoard', 'Board')
     cards = SubList('Card')
 
@@ -286,9 +306,9 @@ class Member(LazyTrello):
 
     _prefix = '/members/'
 
-    url = Field('url')
+    url = Field()
     fullname = Field('fullName')
-    username = Field('username')
+    username = Field()
 
     actions = SubList('Action')
     boards = SubList('Board')
@@ -301,10 +321,10 @@ class Notification(LazyTrello):
 
     _prefix = '/notifications/'
 
-    data = Field('data')
-    date = DateField('date')
-    type = Field('type')
-    unread = Field('unread')
+    data = Field()
+    date = DateField()
+    type = Field()
+    unread = Field()
 
     creator = ObjectField('idMemberCreator', 'Member')
 
@@ -313,10 +333,10 @@ class Organization(LazyTrello):
 
     _prefix = '/organizations/'
 
-    url = Field('url')
-    desc = Field('desc')
+    url = Field()
+    desc = Field()
     displayname = Field('displayName')
-    name = Field('name')
+    name = Field()
 
     actions = SubList('Action')
     boards = SubList('Board')
