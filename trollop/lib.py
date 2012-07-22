@@ -62,6 +62,9 @@ class TrelloConnection(object):
     def get_list(self, list_id):
         return List(self, list_id)
 
+    def get_checklist(self, checklist_id):
+        return Checklist(self, checklist_id)
+
     def get_member(self, member_id):
         return Member(self, member_id)
 
@@ -269,17 +272,22 @@ class Card(LazyTrello, Closable):
 class Checklist(LazyTrello):
 
     _prefix = '/checklists/'
-    checkitems = Field()
+
+    checkItems = SubList('CheckItem')
     name = Field()
     board = ObjectField('idBoard', 'Board')
     cards = SubList('Card')
 
-    # TODO: provide a nicer API for checkitems.  Figure out where they're
-    # marked as checked or not.
-
     # TODO: Figure out why checklists have a /cards/ subpath in the docs.  How
     # could one checklist belong to multiple cards?
 
+class CheckItem(LazyTrello):
+    
+    _prefix = '/checkItems/'
+
+    name = Field()
+    pos = Field()
+    type = Field()
 
 class List(LazyTrello, Closable):
 

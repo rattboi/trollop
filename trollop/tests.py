@@ -86,3 +86,23 @@ class SublistTests(TrollopTestCase):
         assert (self.conn.me.boards[1].lists[0].name ==
                 'Fake List from Fake Board 2')
 
+class ChecklistItemTests(TrollopTestCase):
+    
+    data = { '/1/checklists/fakeCheckListId/checkItems/': 
+            [
+                {   'id':   'fakeCheckItem1',
+                    'name': 'fake Check Item 1',
+                    'type': 'check',
+                    'pos':  123456 },
+                {   'id':   'fakeCheckItem2',
+                    'name': 'fake Check Item 2',
+                    'type': 'check',
+                    'pos':  123457 },
+            ]}
+
+    def test_checkItem_members(self):
+        checklist = self.conn.get_checklist('fakeCheckListId')
+
+        assert(checklist.checkItems[0].name == 'fake Check Item 1')
+        assert(checklist.checkItems[0].type == 'check')
+        assert(checklist.checkItems[1].pos  == 123457)
