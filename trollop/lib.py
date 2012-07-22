@@ -266,6 +266,7 @@ class Card(LazyTrello, Closable):
     board = ObjectField('idBoard', 'Board')
     list = ObjectField('idList', 'List')
 
+    checklists = ListField('idChecklists','Checklist')
     members = ListField('idMembers', 'Member')
 
 
@@ -277,6 +278,9 @@ class Checklist(LazyTrello):
     name = Field()
     board = ObjectField('idBoard', 'Board')
     cards = SubList('Card')
+
+    # TODO: provide a nicer API for checkitems.  Figure out where they're
+    # marked as checked or not.
 
     # TODO: Figure out why checklists have a /cards/ subpath in the docs.  How
     # could one checklist belong to multiple cards?
