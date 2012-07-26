@@ -3,15 +3,15 @@ from setuptools import setup, find_packages
 
 setup(
     name='trollop',
-    version='0.0.8',
+    version='0.0.9',
     author='Brent Tubbs',
     author_email='brent.tubbs@gmail.com',
-	packages=find_packages(),
+    packages=find_packages(),
     include_package_data=True,
-	install_requires = [
+    install_requires=[
         'requests',
         'isodate',
-	],
+    ],
     url='http://bits.btubbs.com/trollop',
     description='A Python library for working with the Trello api.',
     long_description=open('README.rst').read(),
