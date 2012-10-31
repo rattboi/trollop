@@ -53,6 +53,9 @@ class TrelloConnection(object):
     def put(self, path, params=None, body=None):
         return self.request('PUT', path, params, body)
 
+    def delete(self, path, params=None, body=None):
+        return self.request('DELETE', path, params, body)
+
     def get_board(self, board_id):
         return Board(self, board_id)
 
@@ -92,6 +95,15 @@ class Closable(object):
         path = self._prefix + self._id + '/closed'
         params = {'value': 'true'}
         result = self._conn.put(path, params=params)
+
+
+class Deletable(object):
+    """
+    Mixin for Trello objects which are allowed to be DELETEd.
+    """
+    def delete(self):
+        path = self._prefix + self._id
+        self._conn.delete(path)
 
 
 class Field(object):
@@ -251,7 +263,7 @@ class Board(LazyTrello, Closable):
     members = SubList('Member')
 
 
-class Card(LazyTrello, Closable):
+class Card(LazyTrello, Closable, Deletable):
 
     _prefix = '/cards/'
 
@@ -286,7 +298,7 @@ class Checklist(LazyTrello):
     # could one checklist belong to multiple cards?
 
 class CheckItem(LazyTrello):
-    
+
     _prefix = '/checkItems/'
 
     name = Field()
