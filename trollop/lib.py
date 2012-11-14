@@ -120,16 +120,19 @@ class Labeled(object):
     ]
 
     def set_label(self, color):
-        self._do_label(color, self._conn.post)
-    def clear_label(self, color):
-        self._do_label(color, self._conn.delete)
-
-    def _do_label(self, color, method):
         color = color.lower()
         if color not in self._valid_label_colors:
             raise ValueError("invalid color")
         path = self._prefix + self._id + '/labels'
-        method(path)
+        params = {'value': color}
+        self._conn.post(path, params=params)
+
+    def clear_label(self, color):
+        color = color.lower()
+        if color not in self._valid_label_colors:
+            raise ValueError("invalid color")
+        path = self._prefix + self._id + '/labels/' + color
+        self._conn.delete(path)
 
 
 class Field(object):
