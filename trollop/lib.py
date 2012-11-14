@@ -110,6 +110,9 @@ class Labeled(object):
     Mixin for Trello objects which have labels.
     """
 
+    # TODO: instead of set_label and get_label, just override the 'labels'
+    #  property to call set and get as appropriate.
+
     _valid_label_colors = [
         'green',
         'yellow',
