@@ -21,9 +21,10 @@ class TrelloError(Exception):
 class TrelloConnection(object):
 
     def __init__(self, api_key, oauth_token):
-        self.session = requests.session(
-            headers={'Accept': 'application/json',
-                     'Content-Type': 'application/json'})
+        self.session = requests.session()
+
+        self.headers={'Accept': 'application/json',
+                'Content-Type': 'application/json'}
         self.key = api_key
         self.token = oauth_token
 
@@ -36,7 +37,7 @@ class TrelloConnection(object):
         params = params or {}
         params.update({'key': self.key, 'token': self.token})
         url += '?' + urlencode(params)
-        response = self.session.request(method, url, data=body)
+        response = self.session.request(method, url, data=body, headers=self.headers)
         if response.status_code != 200:
             # TODO: confirm that Trello never returns a 201, for example, when
             # creating a new object. If it does, then we shouldn't restrict

@@ -3,6 +3,10 @@ Meet Trollop
 
 Trollop is a Python library for working with the `Trello API`_.
 
+Depends On:
+
+`Requests 1.0.4`_
+
 Quick Start
 ===========
 
@@ -135,3 +139,4 @@ Trollop is licensed under the `MIT License`_.
 .. _API key: https://trello.com/card/board/generating-your-developer-key/4ed7e27fe6abb2517a21383d/4eea75831576578f2713f460
 .. _oauth token: https://trello.com/card/board/getting-a-user-token-and-oauth-urls/4ed7e27fe6abb2517a21383d/4eea75bc1576578f2713fc5f 
 .. _MIT License: http://www.opensource.org/licenses/mit-license.php
+.. _Requests 1.0.4: http://docs.python-requests.org/en/latest/
