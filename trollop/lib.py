@@ -87,7 +87,6 @@ class TrelloConnection(object):
         return Member(self, 'me')
 
 
-
 class Closable(object):
     """
     Mixin for Trello objects for which you're allowed to PUT to <id>/closed.
@@ -104,6 +103,39 @@ class Deletable(object):
     """
     def delete(self):
         path = self._prefix + self._id
+        self._conn.delete(path)
+
+
+class Labeled(object):
+    """
+    Mixin for Trello objects which have labels.
+    """
+
+    # TODO: instead of set_label and get_label, just override the 'labels'
+    #  property to call set and get as appropriate.
+
+    _valid_label_colors = [
+        'green',
+        'yellow',
+        'orange',
+        'red',
+        'purple',
+        'blue',
+    ]
+
+    def set_label(self, color):
+        color = color.lower()
+        if color not in self._valid_label_colors:
+            raise ValueError("invalid color")
+        path = self._prefix + self._id + '/labels'
+        params = {'value': color}
+        self._conn.post(path, params=params)
+
+    def clear_label(self, color):
+        color = color.lower()
+        if color not in self._valid_label_colors:
+            raise ValueError("invalid color")
+        path = self._prefix + self._id + '/labels/' + color
         self._conn.delete(path)
 
 
@@ -264,7 +296,7 @@ class Board(LazyTrello, Closable):
     members = SubList('Member')
 
 
-class Card(LazyTrello, Closable, Deletable):
+class Card(LazyTrello, Closable, Deletable, Labeled):
 
     _prefix = '/cards/'
 
@@ -281,7 +313,6 @@ class Card(LazyTrello, Closable, Deletable):
 
     checklists = ListField('idChecklists','Checklist')
     members = ListField('idMembers', 'Member')
-
 
 class Checklist(LazyTrello):
 

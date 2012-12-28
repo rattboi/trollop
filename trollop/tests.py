@@ -2,6 +2,7 @@ import unittest
 import json
 import urlparse
 
+import trollop
 from trollop import TrelloConnection
 
 
@@ -87,8 +88,8 @@ class SublistTests(TrollopTestCase):
                 'Fake List from Fake Board 2')
 
 class ChecklistItemTests(TrollopTestCase):
-    
-    data = { '/1/checklists/fakeCheckListId/checkItems/': 
+
+    data = { '/1/checklists/fakeCheckListId/checkItems/':
             [
                 {   'id':   'fakeCheckItem1',
                     'name': 'fake Check Item 1',
@@ -106,3 +107,11 @@ class ChecklistItemTests(TrollopTestCase):
         assert(checklist.checkItems[0].name == 'fake Check Item 1')
         assert(checklist.checkItems[0].type == 'check')
         assert(checklist.checkItems[1].pos  == 123457)
+
+class TestLabeled(object):
+    def test_Cards_are_labeled(self):
+        """
+        Cards should have set_label and clear_label methods.
+        """
+        assert hasattr(trollop.Card, 'set_label')
+        assert hasattr(trollop.Card, 'clear_label')
