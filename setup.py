@@ -3,13 +3,13 @@ from setuptools import setup, find_packages
 
 setup(
     name='trollop',
-    version='0.0.9',
+    version='0.0.10',
     author='Brent Tubbs',
     author_email='brent.tubbs@gmail.com',
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'requests',
+        'requests>=1.2.0',
         'isodate',
     ],
     url='http://bits.btubbs.com/trollop',
