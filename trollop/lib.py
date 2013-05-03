@@ -254,6 +254,22 @@ class LazyTrello(object):
             raise AttributeError("%r object has no attribute %r" %
                                  (type(self).__name__, attr))
 
+    def __unicode__(self):
+        tmpl = u'<%(cls)s: %(name_or_id)s>'
+        # If I have a name, use that
+        if 'name' in self._data:
+            return tmpl % {'cls': self.__class__.__name__,
+                           'name_or_id': self._data['name']}
+
+        return tmpl % {'cls': self.__class__.__name__,
+                       'name_or_id': self._id}
+
+    def __str__(self):
+        return str(self.__unicode__())
+
+    def __repr__(self):
+        return str(self.__unicode__())
+
 ### BEGIN ACTUAL WRAPPER OBJECTS
 
 
