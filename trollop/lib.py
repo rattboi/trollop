@@ -14,17 +14,11 @@ def get_class(str_or_class):
         return str_or_class
 
 
-class TrelloError(Exception):
-    pass
-
-
 class TrelloConnection(object):
 
     def __init__(self, api_key, oauth_token):
         self.session = requests.session()
 
-        self.headers={'Accept': 'application/json',
-                'Content-Type': 'application/json'}
         self.key = api_key
         self.token = oauth_token
 
@@ -37,12 +31,8 @@ class TrelloConnection(object):
         params = params or {}
         params.update({'key': self.key, 'token': self.token})
         url += '?' + urlencode(params)
-        response = self.session.request(method, url, data=body, headers=self.headers)
-        if response.status_code != 200:
-            # TODO: confirm that Trello never returns a 201, for example, when
-            # creating a new object. If it does, then we shouldn't restrict
-            # ourselves to a 200 here.
-            raise TrelloError(response.text)
+        response = self.session.request(method, url, data=body)
+        response.raise_for_status()
         return response.text
 
     def get(self, path, params=None):
