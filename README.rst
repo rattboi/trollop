@@ -16,7 +16,7 @@ The connection object will automatically have a Member object attached,
 representing the user whose oauth token was used to connect::
 
     In [3]: conn.me
-    Out[3]: <trollop.lib.Member object at 0x101707650>
+    Out[3]: <Member: me>
 
     In [4]: conn.me.username
     Out[4]: u'btubbs'
@@ -105,7 +105,7 @@ Trello objects have smart fields that automatically look up related objects::
     In [9]: lst = card.list
 
     In [10]: lst
-    Out[10]: <trollop.lib.List object at 0x101707890>
+    Out[10]: <List: Icebox>
 
     In [11]: lst.name
     Out[11]: u'Icebox'
