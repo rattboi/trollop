@@ -31,7 +31,14 @@ class TrelloConnection(object):
         params = params or {}
         params.update({'key': self.key, 'token': self.token})
         url += '?' + urlencode(params)
-        response = self.session.request(method, url, data=body)
+
+        # Trello recently got picky about headers.  Only set content type if
+        # we're submitting a payload in the body
+        if body:
+            headers = {'Content-Type': 'application/json'}
+        else:
+            headers = None
+        response = self.session.request(method, url, data=body, headers=headers)
         response.raise_for_status()
         return response.text
 
