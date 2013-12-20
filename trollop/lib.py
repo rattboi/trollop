@@ -34,17 +34,21 @@ class TrelloConnection(object):
 
         # Trello recently got picky about headers.  Only set content type if
         # we're submitting a payload in the body
-        if body:
-            headers = {'Content-Type': 'application/json'}
+        if isinstance(body,tuple) and method == 'POST':
+            # body == (filename,file): Use multipart
+            response = requests.post(url, files=dict(file=body))
         else:
-            headers = None
-        response = self.session.request(method, url, data=body, headers=headers)
+            if body:
+                headers = {'Content-Type': 'application/json'}
+            else:
+                headers = None
+            response = self.session.request(method, url, data=body, headers=headers)
         response.raise_for_status()
         return response.text
 
     def get(self, path, params=None):
         return self.request('GET', path, params)
-
+        
     def post(self, path, params=None, body=None):
         return self.request('POST', path, params, body)
 
@@ -156,6 +160,20 @@ class DateField(Field):
     def __get__(self, instance, owner):
         raw = super(DateField, self).__get__(instance, owner)
         return isodate.parse_datetime(raw)
+
+class IntField(Field):
+    def __get__(self, instance, owner):
+        raw = super(IntField, self).__get__(instance, owner)
+        return int(raw)
+
+class BoolField(Field):
+    def __get__(self, instance, owner):
+        raw = super(BoolField, self).__get__(instance, owner)
+        return bool(raw)
+
+class UrlField(Field):
+    def retrieve(self):
+        pass
 
 
 class ObjectField(Field):
@@ -323,9 +341,29 @@ class Card(LazyTrello, Closable, Deletable, Labeled):
 
     board = ObjectField('idBoard', 'Board')
     list = ObjectField('idList', 'List')
+    stickers = SubList('Sticker')
+    attachments = SubList('Attachment')
 
     checklists = ListField('idChecklists','Checklist')
     members = ListField('idMembers', 'Member')
+
+    def detach(self, attachment):
+        """
+        Remove attachment from card
+        """
+        assert isinstance(attachment, Attachment)
+        path = self._path + attachment._path
+        self._conn.delete(path)
+
+    def attach(self, name, file):
+        """
+        Create new attachment from the open 'file' and name it 'name'.
+        """
+        path = self._path + '/attachments'
+        return self._conn.post(path, body=(name,file))
+
+
+
 
 class Checklist(LazyTrello):
 
@@ -369,6 +407,23 @@ class List(LazyTrello, Closable):
         data = json.loads(self._conn.post(path, body=body))
         card = Card(self._conn, data['id'], data)
         return card
+
+class Sticker(LazyTrello):
+    _prefix = '/stickers/'
+
+    image = Field()
+
+
+class Attachment(LazyTrello):
+    # deletable through card
+    _prefix = '/attachments/'
+
+    bytes = IntField()
+    date = DateField()
+    mimeType = Field()
+    name = Field()
+    url = UrlField()
+    isUpload = BoolField()
 
 
 class Member(LazyTrello):
