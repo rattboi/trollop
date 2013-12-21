@@ -362,6 +362,18 @@ class Card(LazyTrello, Closable, Deletable, Labeled):
         path = self._path + '/attachments'
         return self._conn.post(path, body=(name,file))
 
+    def set_cover(self, attachment):
+        """
+        Set attachment as card cover.
+        If attachment is None, remove it.
+        """
+        path = self._path + '/idAttachmentCover'
+        if attachment:
+            self._conn.put(path, dict(value=attachment._id))
+        else:
+            self._conn.put(path, dict(value=''))
+
+
 
 
 
