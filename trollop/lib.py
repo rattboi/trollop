@@ -156,7 +156,6 @@ class Field(object):
 
 
 class DateField(Field):
-
     def __get__(self, instance, owner):
         raw = super(DateField, self).__get__(instance, owner)
         return isodate.parse_datetime(raw)
@@ -170,10 +169,6 @@ class BoolField(Field):
     def __get__(self, instance, owner):
         raw = super(BoolField, self).__get__(instance, owner)
         return bool(raw)
-
-class UrlField(Field):
-    def retrieve(self):
-        pass
 
 
 class ObjectField(Field):
@@ -373,7 +368,36 @@ class Card(LazyTrello, Closable, Deletable, Labeled):
         else:
             self._conn.put(path, dict(value=''))
 
+    def paste_sticker(self, name, position, rotate=None):
+        """
+        Paste a sticker to a card. 
+        position is (x,y,z) where x,y is the top-left corner
+        and z is the layer index (integer)
+        """
+        x,y,z = position
+        params = dict(image= name,
+                    top=y, left=x, zIndex=z)
+        if rotate is not None:
+            params['rotate'] = rotate
+        path = self._path + '/stickers'
+        self._conn.post(path, params)
 
+    def remove_sticker(self, sticker):
+        """
+        Remove a stricker from a card
+        """
+        path = self._path + '/stickers/' + sticker._id
+        self._conn.delete(path)
+
+    def add_comment(self, text):
+        """
+        Add a comment to a card
+        """
+        path = self._path + '/actions/comments'
+        return self._conn.post(path, dict(text=text))
+
+    def remove_comment(self, idAction):
+        pass
 
 
 
@@ -434,8 +458,9 @@ class Attachment(LazyTrello):
     date = DateField()
     mimeType = Field()
     name = Field()
-    url = UrlField()
+    url = Field()
     isUpload = BoolField()
+
 
 
 class Member(LazyTrello):
