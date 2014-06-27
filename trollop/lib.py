@@ -22,7 +22,7 @@ class TrelloConnection(object):
         self.key = api_key
         self.token = oauth_token
 
-    def request(self, method, path, params=None, body=None):
+    def request(self, method, path, params=None, body=None, filename=None):
 
         if not path.startswith('/'):
             path = '/' + path
@@ -34,21 +34,27 @@ class TrelloConnection(object):
 
         # Trello recently got picky about headers.  Only set content type if
         # we're submitting a payload in the body
-        if isinstance(body,tuple) and method == 'POST':
-            # body == (filename,file): Use multipart
-            response = requests.post(url, files=dict(file=body))
+        if body:
+            if method == 'POST':
+              if filename:
+                namedFile = (filename,body)
+              elif hasattr(body, 'name'):
+                namedFile = (body.name, body)
+              else:
+                namedFile = None
+              if namedFile:
+                response = requests.post(url, files=dict(file=namedFile))
+                return response.text
+            headers = {'Content-Type': 'application/json'}
         else:
-            if body:
-                headers = {'Content-Type': 'application/json'}
-            else:
-                headers = None
-            response = self.session.request(method, url, data=body, headers=headers)
+            headers = None
+        response = self.session.request(method, url, data=body, headers=headers)
         response.raise_for_status()
         return response.text
 
     def get(self, path, params=None):
         return self.request('GET', path, params)
-        
+
     def post(self, path, params=None, body=None):
         return self.request('POST', path, params, body)
 
@@ -355,7 +361,7 @@ class Card(LazyTrello, Closable, Deletable, Labeled):
         Create new attachment from the open 'file' and name it 'name'.
         """
         path = self._path + '/attachments'
-        return self._conn.post(path, body=(name,file))
+        return self._conn.request('POST', path, body=file, filename=name)
 
     def set_cover(self, attachment):
         """
@@ -370,7 +376,7 @@ class Card(LazyTrello, Closable, Deletable, Labeled):
 
     def paste_sticker(self, name, position, rotate=None):
         """
-        Paste a sticker to a card. 
+        Paste a sticker to a card.
         position is (x,y,z) where x,y is the top-left corner
         and z is the layer index (integer)
         """
