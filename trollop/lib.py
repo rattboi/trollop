@@ -34,21 +34,20 @@ class TrelloConnection(object):
 
         # Trello recently got picky about headers.  Only set content type if
         # we're submitting a payload in the body
+        namedFile = None
         if body:
-            if method == 'POST':
-              if filename:
-                namedFile = (filename,body)
-              elif hasattr(body, 'name'):
-                namedFile = (body.name, body)
-              else:
-                namedFile = None
-              if namedFile:
-                response = requests.post(url, files=dict(file=namedFile))
-                return response.text
-            headers = {'Content-Type': 'application/json'}
+          headers = {'Content-Type': 'application/json'}
+          if method == 'POST':
+            if filename:
+              namedFile = (filename,body)
+            elif hasattr(body, 'name'):
+              namedFile = (body.name, body)
         else:
-            headers = None
-        response = self.session.request(method, url, data=body, headers=headers)
+          headers = None
+        if namedFile:
+          response = requests.post(url, files=dict(file=namedFile))
+        else:
+          response = self.session.request(method, url, data=body, headers=headers)
         response.raise_for_status()
         return response.text
 
