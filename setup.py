@@ -12,7 +12,7 @@ setup(
         'requests>=1.2.0',
         'isodate',
     ],
-    url='http://bits.btubbs.com/trollop',
+    url='http://bitbucket.org/btubbs/trollop',
     description='A Python library for working with the Trello api.',
     long_description=open('README.rst').read(),
 )
