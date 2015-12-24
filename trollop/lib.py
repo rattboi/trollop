@@ -29,7 +29,7 @@ class TrelloConnection(object):
         url = 'https://api.trello.com/1' + path
 
         params = params or {}
-        params.update({'key': self.key, 'token': self.token})
+        params.update({'key': self.key, 'token': self.token, 'limit': 1000})
         url += '?' + urlencode(params)
 
         # Trello recently got picky about headers.  Only set content type if
