@@ -290,10 +290,10 @@ class LazyTrello(object):
                        'name_or_id': self._id}
 
     def __str__(self):
-        return str(self.__unicode__())
+        return self.__unicode__().encode('utf-8')
 
     def __repr__(self):
-        return str(self.__unicode__())
+        return self.__unicode__().encode('utf-8')
 
 ### BEGIN ACTUAL WRAPPER OBJECTS
 

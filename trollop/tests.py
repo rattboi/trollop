@@ -119,3 +119,12 @@ class TestLabeled(object):
         """
         assert hasattr(trollop.Card, 'set_label')
         assert hasattr(trollop.Card, 'clear_label')
+
+
+class TestUnicode(object):
+    def test_unicode_to_str(self):
+        class TestObject(trollop.LazyTrello):
+            _prefix = '/test/'
+
+        t_obj = TestObject(None, 'id', {'name': u'łßöżź'})
+        str(t_obj)
