@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import unittest
 import json
 import urlparse
@@ -10,6 +11,9 @@ class AttrDict(dict):
     def __init__(self, *args, **kwargs):
         dict.__init__(self, *args, **kwargs)
         self.__dict__ = self
+
+    def raise_for_status(self):
+        pass
 
 class FakeRequest(object):
     """Mock for requests.session.request.  Init it with the headers and data
@@ -115,3 +119,12 @@ class TestLabeled(object):
         """
         assert hasattr(trollop.Card, 'set_label')
         assert hasattr(trollop.Card, 'clear_label')
+
+
+class TestUnicode(object):
+    def test_unicode_to_str(self):
+        class TestObject(trollop.LazyTrello):
+            _prefix = '/test/'
+
+        t_obj = TestObject(None, 'id', {'name': u'łßöżź'})
+        str(t_obj)
