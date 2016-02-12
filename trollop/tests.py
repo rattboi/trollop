@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import unittest
 import json
 import urlparse
@@ -10,6 +11,9 @@ class AttrDict(dict):
     def __init__(self, *args, **kwargs):
         dict.__init__(self, *args, **kwargs)
         self.__dict__ = self
+
+    def raise_for_status(self):
+        pass
 
 class FakeRequest(object):
     """Mock for requests.session.request.  Init it with the headers and data
