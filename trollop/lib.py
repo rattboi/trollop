@@ -454,7 +454,7 @@ class List(LazyTrello, Closable):
 class Label(LazyTrello):
   _prefix = "/labels"
   
-  ObjectField('idBoard', 'Board')
+  board = ObjectField('idBoard', 'Board')
   
   name = Field()
   color = Field()
