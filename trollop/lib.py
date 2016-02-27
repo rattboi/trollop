@@ -338,14 +338,15 @@ class Card(LazyTrello, Closable, Deletable, Labeled):
     badges = Field()
     checkItemStates = Field()
     desc = Field()
-    labels = Field()
+    idLabels = Field()
 
     board = ObjectField('idBoard', 'Board')
     list = ObjectField('idList', 'List')
     stickers = SubList('Sticker')
     attachments = SubList('Attachment')
+    labels = SubList('Label')
 
-    checklists = ListField('idChecklists','Checklist')
+    checklists = ListField('idChecklists', 'Checklist')
     members = ListField('idMembers', 'Member')
 
     def detach(self, attachment):
