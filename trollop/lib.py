@@ -325,6 +325,7 @@ class Board(LazyTrello, Closable):
     checklists = SubList('Checklist')
     lists = SubList('List')
     members = SubList('Member')
+    labels = SubList('Label')
 
 
 class Card(LazyTrello, Closable, Deletable, Labeled):
@@ -448,6 +449,15 @@ class List(LazyTrello, Closable):
         data = json.loads(self._conn.post(path, body=body))
         card = Card(self._conn, data['id'], data)
         return card
+
+class Label(LazyTrello):
+  _prefix = "/labels"
+  
+  ObjectField('idBoard', 'Board')
+  
+  name = Field()
+  color = Field()
+  uses = IntField()
 
 class Sticker(LazyTrello):
     _prefix = '/stickers/'
