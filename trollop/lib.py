@@ -455,13 +455,13 @@ class List(LazyTrello, Closable):
         return card
 
 class Label(LazyTrello):
-  _prefix = "/labels"
-  
-  board = ObjectField('idBoard', 'Board')
-  
-  name = Field()
-  color = Field()
-  uses = IntField()
+    _prefix = "/labels"
+    
+    board = ObjectField('idBoard', 'Board')
+    
+    name = Field()
+    color = Field()
+    uses = IntField()
 
 class Sticker(LazyTrello):
     _prefix = '/stickers/'
