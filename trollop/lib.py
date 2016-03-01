@@ -279,6 +279,9 @@ class LazyTrello(object):
             raise AttributeError("%r object has no attribute %r" %
                                  (type(self).__name__, attr))
 
+    def __getitem__(self, key):
+        return self._data[key]
+        
     def __unicode__(self):
         tmpl = u'<%(cls)s: %(name_or_id)s>'
         # If I have a name, use that
