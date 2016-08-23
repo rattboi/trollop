@@ -10,7 +10,8 @@ setup(
     include_package_data=True,
     install_requires=[
         'requests>=1.2.0',
-        'isodate',
+        'six>=1.10.0',
+        'isodate>=0.5.4',
     ],
     url='http://bitbucket.org/btubbs/trollop',
     description='A Python library for working with the Trello api.',

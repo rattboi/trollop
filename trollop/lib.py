@@ -1,6 +1,8 @@
-from urllib import urlencode
 import json
 import isodate
+
+import six
+from six.moves.urllib.parse import urlencode
 
 import requests
 
@@ -243,18 +245,17 @@ class TrelloMeta(type):
         return super(TrelloMeta, cls).__new__(cls, name, bases, dct)
 
 
+@six.add_metaclass(TrelloMeta)
 class LazyTrello(object):
     """
     Parent class for Trello objects (cards, lists, boards, members, etc).  This
     should always be subclassed, never used directly.
     """
 
-    __metaclass__ = TrelloMeta
-
     # The Trello API path where objects of this type may be found. eg '/cards/'
     @property
     def _prefix(self):
-        raise NotImplementedError, "LazyTrello subclasses MUST define a _prefix"
+        raise NotImplementedError("LazyTrello subclasses MUST define a _prefix")
 
     def __init__(self, conn, obj_id, data=None):
         self._id = obj_id
@@ -281,7 +282,7 @@ class LazyTrello(object):
 
     def __getitem__(self, key):
         return self._data[key]
-        
+
     def __unicode__(self):
         tmpl = u'<%(cls)s: %(name_or_id)s>'
         # If I have a name, use that
@@ -293,12 +294,16 @@ class LazyTrello(object):
                        'name_or_id': self._id}
 
     def __str__(self):
-        return self.__unicode__().encode('utf-8')
+        txt = self.__unicode__()
+        if six.PY2:
+            return self.__unicode__().encode('utf-8')
+        return txt
 
     def __repr__(self):
-        return self.__unicode__().encode('utf-8')
+        return self.__unicode__()
 
-### BEGIN ACTUAL WRAPPER OBJECTS
+
+# BEGIN ACTUAL WRAPPER OBJECTS
 
 
 class Action(LazyTrello):
