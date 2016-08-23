@@ -16,4 +16,10 @@ setup(
     url='http://bitbucket.org/btubbs/trollop',
     description='A Python library for working with the Trello api.',
     long_description=open('README.rst').read(),
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.5",
+    ],
 )
