@@ -1,5 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import json
 import isodate
+import datetime
 
 import six
 from six.moves.urllib.parse import urlencode
@@ -32,7 +36,7 @@ class TrelloConnection(object):
 
         params = params or {}
         params.update({'key': self.key, 'token': self.token, 'limit': 1000})
-        url += '?' + urlencode(params)
+        url += u'?' + urlencode(params)
 
         # Trello recently got picky about headers.  Only set content type if
         # we're submitting a payload in the body
@@ -347,6 +351,7 @@ class Card(LazyTrello, Closable, Deletable, Labeled):
     checkItemStates = Field()
     desc = Field()
     idLabels = Field()
+    due = DateField()
 
     board = ObjectField('idBoard', 'Board')
     list = ObjectField('idList', 'List')
@@ -371,6 +376,19 @@ class Card(LazyTrello, Closable, Deletable, Labeled):
         """
         path = self._path + '/attachments'
         return self._conn.request('POST', path, body=file, filename=name)
+
+    def set_due_date(self, due_date):
+        """
+        Set due date on a card.
+        If due date is None, remove it.
+        """
+        path = self._path + '/due'
+        if type(due_date) in [datetime.time, datetime.datetime]:
+            due_date = due_date.isoformat()
+        if due_date:
+            self._conn.put(path, dict(value=due_date))
+        else:
+            self._conn.put(path, dict(value=''))
 
     def set_cover(self, attachment):
         """
@@ -409,7 +427,7 @@ class Card(LazyTrello, Closable, Deletable, Labeled):
         Add a comment to a card
         """
         path = self._path + '/actions/comments'
-        return self._conn.post(path, dict(text=text))
+        return self._conn.post(path, dict(text=unicode(text)))
 
     def remove_comment(self, idAction):
         pass
@@ -461,9 +479,9 @@ class List(LazyTrello, Closable):
 
 class Label(LazyTrello):
     _prefix = "/labels"
-    
+
     board = ObjectField('idBoard', 'Board')
-    
+
     name = Field()
     color = Field()
     uses = IntField()
