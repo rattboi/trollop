@@ -54,6 +54,7 @@ class TrelloConnection(object):
           response = requests.post(url, files=dict(file=namedFile))
         else:
           response = self.session.request(method, url, data=body, headers=headers)
+        # print("method: {}, url: {}, data: {}, headers: {}".format(method, url, body, headers))
         response.raise_for_status()
         return response.text
 
@@ -427,7 +428,7 @@ class Card(LazyTrello, Closable, Deletable, Labeled):
         Add a comment to a card
         """
         path = self._path + '/actions/comments'
-        return self._conn.post(path, dict(text=unicode(text)))
+        return self._conn.post(path, dict(text=text))
 
     def remove_comment(self, idAction):
         pass
@@ -471,9 +472,9 @@ class List(LazyTrello, Closable):
     # correctly with SubList
     def add_card(self, name, desc=None):
         path = self._prefix + self._id + '/cards'
-        body = json.dumps({'name': name, 'idList': self._id, 'desc': desc,
-                           'key': self._conn.key, 'token': self._conn.token})
-        data = json.loads(self._conn.post(path, body=body))
+        params = {'name': name, 'idList': self._id, 'desc': desc[:1000],
+                  'key': self._conn.key, 'token': self._conn.token}
+        data = json.loads(self._conn.post(path, params=params))
         card = Card(self._conn, data['id'], data)
         return card
 
